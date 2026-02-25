@@ -3,7 +3,6 @@ name: Engine ML Pipeline
 on:
   push:
     branches: [ main ]
-
   workflow_dispatch:
 
 jobs:
@@ -12,36 +11,32 @@ jobs:
 
     steps:
 
-    - name: ✅ Checkout repository
+    - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: 🐍 Set up Python
+    - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: 3.10
 
-    - name: 📦 Install dependencies
+    - name: Install dependencies
       run: |
         pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: 📂 Verify project structure
+    - name: Login to Hugging Face
       run: |
-        ls
-        ls data
+        pip install huggingface_hub
+        python -c "from huggingface_hub import login; login('${{ secrets.HF_TOKEN }}')"
 
-    - name: 🚀 Run training pipeline
+    - name: Run training pipeline
       run: |
         python src/pipeline/train_pipeline.py
 
-    - name: 📊 Show generated artifacts
-      run: |
-        ls model_registry
-
-    - name: 💾 Commit model & metrics
+    - name: Commit & push artifacts
       run: |
         git config --global user.name "github-actions"
         git config --global user.email "actions@github.com"
         git add model_registry/*
-        git commit -m "Auto-update: model & metrics" || echo "No changes"
+        git commit -m "Auto-update artifacts" || echo "No changes"
         git push
